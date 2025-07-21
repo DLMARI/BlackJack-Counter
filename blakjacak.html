@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador Blackjack</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --text: #f0f0f0;
+      --accent: #00c853;
+      --danger: #e53935;
+      --warning: #ff9800;
+      --card-bg: #1e1e1e;
+      --button-bg: #2c2c2c;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 15px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    input[type="number"] {
+      padding: 10px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      width: 80px;
+      text-align: center;
+      background-color: var(--card-bg);
+      color: var(--text);
+    }
+
+   .buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+
+    button {
+      padding: 15px;
+      font-size: 1.2rem;
+      background-color: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #3a3a3a;
+    }
+
+    .status-box {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    .status-box div {
+      margin: 10px 0;
+      font-size: 1.2rem;
+    }
+
+    .recommendation {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .recom-apuesta {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .recom-espera {
+      background-color: var(--warning);
+      color: white;
+    }
+
+    .recom-no {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .recom-esperando {
+      background-color: #555;
+      color: #ddd;
+    }
+
+    .reset-btn {
+      background-color: #ff3d00;
+      color: white;
+      font-weight: bold;
+    }
+
+    @media (max-width: 480px) {
+      button {
+        font-size: 1.1rem;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Contador de Cartas</h1>
+
+  <div class="input-group">
+    <label for="mazos">Mazos:</label>
+    <input type="number" id="mazos" min="1" value="6">
+    <button class="reset-btn" onclick="reiniciar()">Reiniciar</button>
+  </div>
+
+  <div class="buttons" id="cardButtons"></div>
+
+  <div class="status-box">
+    <div>Cuenta normal: <span id="cuenta">0</span></div>
+    <div>Cuenta real: <span id="real">0.00</span></div>
+    <div id="recomendacion" class="recommendation recom-esperando">Esperando cuenta...</div>
+  </div>
+
+  <script>
+    const valores = {
+      "2": 1, "3": 1, "4": 1, "5": 1, "6": 1,
+      "7": 0, "8": 0, "9": 0,
+      "10": -1, "J": -1, "Q": -1, "K": -1, "A": -1
+    };
+
+    let cuenta = 0;
+    let cartasVistas = 0;
+
+    const cuentaSpan = document.getElementById('cuenta');
+    const realSpan = document.getElementById('real');
+    const recomendacion = document.getElementById('recomendacion');
+    const mazosInput = document.getElementById('mazos');
+    const cardButtonsDiv = document.getElementById('cardButtons');
+
+    const cartas = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+    cartas.forEach(carta => {
+      const btn = document.createElement('button');
+      btn.innerText = carta;
+      btn.onclick = () => agregarCarta(carta);
+      cardButtonsDiv.appendChild(btn);
+    });
+
+    function agregarCarta(carta) {
+      cuenta += valores[carta];
+      cartasVistas++;
+      actualizarConteo();
+    }
+
+    function reiniciar() {
+      cuenta = 0;
+      cartasVistas = 0;
+      actualizarConteo();
+    }
+
+    function actualizarConteo() {
+      const mazos = parseFloat(mazosInput.value);
+      const mazosRestantes = Math.max(1, mazos - (cartasVistas / 52));
+      const cuentaReal = cuenta / mazosRestantes;
+
+      cuentaSpan.textContent = cuenta;
+      realSpan.textContent = cuentaReal.toFixed(2);
+
+      if (cartasVistas === 0) {
+        recomendacion.textContent = "Esperando cuenta...";
+        recomendacion.className = "recommendation recom-esperando";
+        return;
+      }
+
+      if (cuentaReal >= 2) {
+        recomendacion.textContent = "¡Apuesta!";
+        recomendacion.className = "recommendation recom-apuesta";
+      } else if (cuentaReal <= 0) {
+        recomendacion.textContent = "No apuestes";
+        recomendacion.className = "recommendation recom-no";
+      } else {
+        recomendacion.textContent = "Espera";
+        recomendacion.className = "recommendation recom-espera";
+      }
+    }
+  </script>
+
+</body>
+</html>
